@@ -1,0 +1,7 @@
+.app {
+  display: flex;
+}
+
+.app__main {
+  flex: 1;
+}
