@@ -5,8 +5,11 @@ import fileIcon from '../assets/icons/file.svg'
 import { useDispatch } from 'react-redux'
 import fileSlice from '../api/fileSlice'
 import { rootDirectory } from '../utils/const'
+import { useState } from 'react'
+import Control from './Control'
 
 const SidebarItem = ({ name, url, isFile, setPathInput, pathInput }) => {
+  const [isSelect, setIsSelect] = useState(false)
   const dispatch = useDispatch()
   const onDoubleClickHandler = async () => {
     let newUrl = ''
@@ -29,7 +32,7 @@ const SidebarItem = ({ name, url, isFile, setPathInput, pathInput }) => {
 
   const handleContextMenu = (e) => {
     e.preventDefault()
-    console.log('Right-clicked!')
+    setIsSelect(true)
   }
   return (
     <div
@@ -41,6 +44,13 @@ const SidebarItem = ({ name, url, isFile, setPathInput, pathInput }) => {
       <div title={url} className="sidebarItem__name">
         {name}
       </div>
+      {isSelect && name !== '...' && (
+        <Control
+          closeModal={() => {
+            setIsSelect(false)
+          }}
+        />
+      )}
     </div>
   )
 }

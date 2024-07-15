@@ -5,7 +5,7 @@ const initialState = {
   loading: false,
   error: null,
   files: [],
-  path: 'C:/Users/ducdoa/Project/blog/'
+  path: 'C:/Users/ddoan/'
 }
 const fileSlice = createSlice({
   name: 'files',

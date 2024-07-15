@@ -1,4 +1,5 @@
 .sidebarItem {
+  position: relative;
   padding: 5px 10px;
   display: flex;
   align-items: center;

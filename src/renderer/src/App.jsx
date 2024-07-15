@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import fileSlice from './api/fileSlice'
 import './assets/app.css'
 import Sidebar from './components/Sidebar'
+import TerminalScreen from './components/TerminalScreen'
 
 function App() {
   const dispatch = useDispatch()
@@ -17,7 +18,9 @@ function App() {
   return (
     <div className="app">
       <Sidebar />
-      <div className="app__main"></div>
+      <div className="app__main">
+        <TerminalScreen />
+      </div>
     </div>
   )
 }
