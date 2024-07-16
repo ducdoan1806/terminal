@@ -20,6 +20,7 @@ function App() {
     <div className="app">
       <Sidebar />
       <div className="app__main">
+        {/* <TerminalScreen /> */}
         <Player />
       </div>
     </div>

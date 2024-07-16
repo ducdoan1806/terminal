@@ -7,15 +7,9 @@ const api = {
     ipcRenderer.invoke('read-dir', dirPath)
   },
   checkFolderAccess: (folderPath) => ipcRenderer.invoke('check-folder-access', folderPath),
-
+  send: (data) => ipcRenderer.invoke('execute-command', data),
   receive: (channel, func) => {
     ipcRenderer.on(channel, (event, ...args) => func(...args))
-  },
-  sendTerminalCmd: (cmd) => {
-    ipcRenderer.send('terminal-command', cmd)
-  },
-  onTerminalOutput: (callback) => {
-    ipcRenderer.on('terminal-output', (event, data) => callback(data))
   }
 }
 

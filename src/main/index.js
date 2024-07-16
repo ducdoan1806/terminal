@@ -2,9 +2,9 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-const { spawn } = require('child_process')
+const { exec } = require('child_process')
 const fs = require('fs')
-let ptyProcess
+
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -37,11 +37,6 @@ function createWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
-  mainWindow.on('closed', () => {
-    if (ptyProcess) {
-      ptyProcess.kill()
-    }
-  })
 }
 
 // This method will be called when Electron has finished
@@ -85,29 +80,29 @@ app.whenReady().then(() => {
       return { accessible: false, error: err.message }
     }
   })
-  ipcMain.on('terminal-command', (event, command) => {
-    if (!ptyProcess) {
-      const shell = process.platform === 'win32' ? 'cmd.exe' : 'bash'
-      ptyProcess = spawn(shell, [], { shell: true })
-      ptyProcess.stdout.on('data', (data) => {
-        event.reply('terminal-output', data.toString())
-      })
-      ptyProcess.stderr.on('data', (data) => {
-        event.reply('terminal-output', data.toString())
-      })
-      ptyProcess.on('close', () => {
-        event.reply('terminal-output', '')
-        ptyProcess = null
-      })
-    }
-    if (command.trim().toLowerCase() === 'cls' && process.platform === 'win32') {
-      ptyProcess.stdin.write(`cls\r\n`)
-    } else if (command.trim().toLowerCase() === 'clear' && process.platform !== 'win32') {
-      ptyProcess.stdin.write(`clear\r\n`)
-    } else {
-      ptyProcess.stdin.write(`${command}\r\n`)
+  ipcMain.handle('execute-command', async (event, command) => {
+    try {
+      const { stdout, stderr } = await executeCommand(command)
+      if (stderr) {
+        return { error: stderr }
+      }
+      return { result: stdout }
+    } catch (error) {
+      return { error: error.message }
     }
   })
+
+  async function executeCommand(command) {
+    return new Promise((resolve, reject) => {
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve({ stdout, stderr })
+        }
+      })
+    })
+  }
   createWindow()
 
   app.on('activate', function () {
