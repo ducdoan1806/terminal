@@ -2,8 +2,9 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-
+const { spawn } = require('child_process')
 const fs = require('fs')
+let ptyProcess
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -14,7 +15,9 @@ function createWindow() {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      contextIsolation: false,
+      nodeIntegration: true
     }
   })
 
@@ -34,6 +37,11 @@ function createWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+  mainWindow.on('closed', () => {
+    if (ptyProcess) {
+      ptyProcess.kill()
+    }
+  })
 }
 
 // This method will be called when Electron has finished
@@ -75,6 +83,29 @@ app.whenReady().then(() => {
       return { accessible: true }
     } catch (err) {
       return { accessible: false, error: err.message }
+    }
+  })
+  ipcMain.on('terminal-command', (event, command) => {
+    if (!ptyProcess) {
+      const shell = process.platform === 'win32' ? 'cmd.exe' : 'bash'
+      ptyProcess = spawn(shell, [], { shell: true })
+      ptyProcess.stdout.on('data', (data) => {
+        event.reply('terminal-output', data.toString())
+      })
+      ptyProcess.stderr.on('data', (data) => {
+        event.reply('terminal-output', data.toString())
+      })
+      ptyProcess.on('close', () => {
+        event.reply('terminal-output', '')
+        ptyProcess = null
+      })
+    }
+    if (command.trim().toLowerCase() === 'cls' && process.platform === 'win32') {
+      ptyProcess.stdin.write(`cls\r\n`)
+    } else if (command.trim().toLowerCase() === 'clear' && process.platform !== 'win32') {
+      ptyProcess.stdin.write(`clear\r\n`)
+    } else {
+      ptyProcess.stdin.write(`${command}\r\n`)
     }
   })
   createWindow()

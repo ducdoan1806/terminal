@@ -4,5 +4,6 @@
 
 .app__main {
   flex: 1;
-  background: #000;
+  position: relative;
+  /* background: #000; */
 }
